@@ -2,7 +2,6 @@
 document.addEventListener('DOMContentLoaded', function() {
   loadBlockedUsers();
   
-  document.getElementById('clearAll').addEventListener('click', clearAllBlockedUsers);
   document.getElementById('exportBtn').addEventListener('click', exportBlockedUsers);
   document.getElementById('importBtn').addEventListener('click', function() {
     document.getElementById('fileInput').click();
@@ -19,14 +18,11 @@ function loadBlockedUsers() {
 
 function displayBlockedUsers(blockedUsers) {
   const container = document.getElementById('blockedUsersList');
-  const clearAllBtn = document.getElementById('clearAll');
   
   if (blockedUsers.length === 0) {
     container.innerHTML = '<div class="empty-state">No blocked users yet</div>';
-    clearAllBtn.style.display = 'none';
   } else {
     container.innerHTML = '';
-    clearAllBtn.style.display = 'block';
     
     blockedUsers.forEach(username => {
       const userDiv = document.createElement('div');
@@ -39,7 +35,7 @@ function displayBlockedUsers(blockedUsers) {
       
       const unblockBtn = userDiv.querySelector('.unblock-btn');
       unblockBtn.addEventListener('click', function() {
-        unblockUser(username);
+        showConfirmation(`Unblock user "${username}"?`, () => unblockUser(username));
       });
       
       container.appendChild(userDiv);
@@ -84,6 +80,51 @@ function clearAllBlockedUsers() {
   }
 }
 
+function showNotification(message, type = 'info') {
+  const notification = document.getElementById('notification');
+  notification.textContent = message;
+  notification.className = `notification ${type}`;
+  
+  setTimeout(() => {
+    notification.classList.add('hidden');
+  }, 3000);
+}
+
+function showConfirmation(message, onConfirm) {
+  const dialog = document.createElement('div');
+  dialog.className = 'confirmation-dialog';
+  
+  dialog.innerHTML = `
+    <div class="confirmation-content">
+      <div>${escapeHtml(message)}</div>
+      <div class="confirmation-buttons">
+        <button class="confirm-btn">Yes</button>
+        <button class="cancel-btn">Cancel</button>
+      </div>
+    </div>
+  `;
+  
+  const confirmBtn = dialog.querySelector('.confirm-btn');
+  const cancelBtn = dialog.querySelector('.cancel-btn');
+  
+  confirmBtn.addEventListener('click', () => {
+    document.body.removeChild(dialog);
+    onConfirm();
+  });
+  
+  cancelBtn.addEventListener('click', () => {
+    document.body.removeChild(dialog);
+  });
+  
+  dialog.addEventListener('click', (e) => {
+    if (e.target === dialog) {
+      document.body.removeChild(dialog);
+    }
+  });
+  
+  document.body.appendChild(dialog);
+}
+
 function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
@@ -122,14 +163,14 @@ function importBlockedUsers(event) {
       const data = JSON.parse(e.target.result);
       
       if (!data.blockedUsers || !Array.isArray(data.blockedUsers)) {
-        alert('Invalid file format. Please select a valid blocked users export file.');
+        showNotification('Invalid file format. Please select a valid blocked users export file.', 'error');
         return;
       }
       
       const importedUsers = data.blockedUsers.filter(user => typeof user === 'string');
       
       if (importedUsers.length === 0) {
-        alert('No valid users found in the import file.');
+        showNotification('No valid users found in the import file.', 'error');
         return;
       }
       
@@ -151,15 +192,15 @@ function importBlockedUsers(event) {
           
           const newUsersCount = mergedUsers.length - existingUsers.length;
           if (newUsersCount > 0) {
-            alert(`Successfully imported ${newUsersCount} new blocked users!`);
+            showNotification(`Successfully imported ${newUsersCount} new blocked users!`, 'success');
           } else {
-            alert('All users from the import file were already blocked.');
+            showNotification('All users from the import file were already blocked.', 'info');
           }
         });
       });
       
     } catch (error) {
-      alert('Error reading file. Please make sure it\'s a valid JSON file.');
+      showNotification('Error reading file. Please make sure it\'s a valid JSON file.', 'error');
     }
   };
   

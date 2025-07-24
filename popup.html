@@ -95,6 +95,91 @@
     .import-export-btn:hover {
       background: #7c3aed;
     }
+    
+    .notification {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #9146ff;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 5px;
+      font-size: 12px;
+      z-index: 1000;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      transition: opacity 0.3s ease;
+    }
+    
+    .notification.success {
+      background: #00c851;
+    }
+    
+    .notification.error {
+      background: #ff4444;
+    }
+    
+    .notification.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    .confirmation-dialog {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1001;
+    }
+    
+    .confirmation-content {
+      background: #1f1f23;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid #2f2f35;
+      min-width: 200px;
+      text-align: center;
+    }
+    
+    .confirmation-buttons {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+    
+    .confirm-btn {
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    
+    .cancel-btn {
+      background: #444;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    
+    .confirm-btn:hover {
+      background: #ff5252;
+    }
+    
+    .cancel-btn:hover {
+      background: #555;
+    }
   </style>
 </head>
 <body>
@@ -108,13 +193,14 @@
     <div class="empty-state">No blocked users yet</div>
   </div>
   
-  <button id="clearAll" class="clear-all-btn" style="display: none;">Clear All Blocked Users</button>
-  
   <div id="importExport" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #2f2f35;">
     <button id="exportBtn" class="import-export-btn">Export Blocked Users</button>
     <button id="importBtn" class="import-export-btn">Import Blocked Users</button>
     <input type="file" id="fileInput" accept=".json" style="display: none;">
   </div>
+  
+  <!-- Custom notification -->
+  <div id="notification" class="notification hidden"></div>
   
   <script src="popup.js"></script>
 </body>
