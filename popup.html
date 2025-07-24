@@ -17,6 +17,7 @@
       margin: 0 0 15px 0;
       color: #9146ff;
       font-size: 16px;
+      text-align: center;
     }
     
     .blocked-user {
@@ -53,6 +54,60 @@
       text-align: center;
       color: #adadb8;
       padding: 20px 0;
+    }
+    
+    .manual-add-section {
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #2f2f35;
+    }
+    
+    .username-input {
+      width: 100%;
+      background: #1f1f23;
+      border: 1px solid #2f2f35;
+      color: #efeff1;
+      padding: 8px 10px;
+      border-radius: 3px;
+      font-size: 12px;
+      margin-bottom: 8px;
+      box-sizing: border-box;
+    }
+    
+    .username-input:focus {
+      outline: none;
+      border-color: #9146ff;
+    }
+    
+    .username-input::placeholder {
+      color: #adadb8;
+    }
+    
+    .add-user-btn {
+      background: #9146ff;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+      width: 100%;
+    }
+    
+    .add-user-btn:hover {
+      background: #7c3aed;
+    }
+    
+    .add-user-btn:disabled {
+      background: #444;
+      cursor: not-allowed;
+    }
+    
+    #importExport {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #2f2f35;
+      text-align: center;
     }
     
     .instructions {
@@ -189,11 +244,17 @@
     Right-click on any Twitch username link in VOD chat and select "Block this Twitch user" to hide their messages.
   </div>
   
+  <!-- Manual add section -->
+  <div class="manual-add-section">
+    <input type="text" id="usernameInput" placeholder="Enter username to block" class="username-input">
+    <button id="addUserBtn" class="add-user-btn">Block User</button>
+  </div>
+  
   <div id="blockedUsersList">
     <div class="empty-state">No blocked users yet</div>
   </div>
   
-  <div id="importExport" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #2f2f35;">
+  <div id="importExport">
     <button id="exportBtn" class="import-export-btn">Export Blocked Users</button>
     <button id="importBtn" class="import-export-btn">Import Blocked Users</button>
     <input type="file" id="fileInput" accept=".json" style="display: none;">

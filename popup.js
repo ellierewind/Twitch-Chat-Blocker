@@ -7,6 +7,12 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('fileInput').click();
   });
   document.getElementById('fileInput').addEventListener('change', importBlockedUsers);
+  document.getElementById('addUserBtn').addEventListener('click', addUserManually);
+  document.getElementById('usernameInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      addUserManually();
+    }
+  });
 });
 
 function loadBlockedUsers() {
@@ -123,6 +129,48 @@ function showConfirmation(message, onConfirm) {
   });
   
   document.body.appendChild(dialog);
+}
+
+function addUserManually() {
+  const input = document.getElementById('usernameInput');
+  const username = input.value.trim().toLowerCase();
+  
+  if (!username) {
+    showNotification('Please enter a username', 'error');
+    return;
+  }
+  
+  // Basic validation for Twitch usernames
+  if (!/^[a-zA-Z0-9_]{1,25}$/.test(username)) {
+    showNotification('Invalid username format. Use only letters, numbers, and underscores (1-25 characters)', 'error');
+    return;
+  }
+  
+  chrome.storage.sync.get(['blockedUsers'], function(result) {
+    const blockedUsers = result.blockedUsers || [];
+    
+    if (blockedUsers.includes(username)) {
+      showNotification('User is already blocked', 'info');
+      input.value = '';
+      return;
+    }
+    
+    blockedUsers.push(username);
+    chrome.storage.sync.set({ blockedUsers }, function() {
+      displayBlockedUsers(blockedUsers);
+      showNotification(`Successfully blocked user: ${username}`, 'success');
+      input.value = '';
+      
+      // Notify content script
+      chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+        if (tabs[0] && tabs[0].url.includes('twitch.tv')) {
+          chrome.tabs.sendMessage(tabs[0].id, {
+            action: 'refreshBlockedUsers'
+          });
+        }
+      });
+    });
+  });
 }
 
 function escapeHtml(text) {
