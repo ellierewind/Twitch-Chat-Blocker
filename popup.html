@@ -79,6 +79,22 @@
     .clear-all-btn:hover {
       background: #ff5252;
     }
+    
+    .import-export-btn {
+      background: #9146ff;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-right: 5px;
+      margin-bottom: 5px;
+    }
+    
+    .import-export-btn:hover {
+      background: #7c3aed;
+    }
   </style>
 </head>
 <body>
@@ -93,6 +109,12 @@
   </div>
   
   <button id="clearAll" class="clear-all-btn" style="display: none;">Clear All Blocked Users</button>
+  
+  <div id="importExport" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #2f2f35;">
+    <button id="exportBtn" class="import-export-btn">Export Blocked Users</button>
+    <button id="importBtn" class="import-export-btn">Import Blocked Users</button>
+    <input type="file" id="fileInput" accept=".json" style="display: none;">
+  </div>
   
   <script src="popup.js"></script>
 </body>

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Twitch VOD Chat Blocker",
-  "version": "1.0",
+  "version": "2.0",
   "description": "Block chat messages from specific users in Twitch VODs",
   "permissions": [
     "contextMenus",
