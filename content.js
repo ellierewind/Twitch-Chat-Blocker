@@ -13,13 +13,29 @@ function initializeBlockedUsers() {
 
 // Hide messages from blocked users
 function hideBlockedMessages() {
-  const chatMessages = document.querySelectorAll('li[class*="InjectLayout"] div[data-user]');
+  // Handle VOD chat messages
+  const vodChatMessages = document.querySelectorAll('li[class*="InjectLayout"] div[data-user]');
   
-  chatMessages.forEach(messageDiv => {
+  vodChatMessages.forEach(messageDiv => {
     const username = messageDiv.getAttribute('data-user');
-    if (username && blockedUsers.includes(username)) {
+    if (username && blockedUsers.includes(username.toLowerCase())) {
       // Hide the entire message container (li element)
       const messageContainer = messageDiv.closest('li');
+      if (messageContainer) {
+        messageContainer.style.display = 'none';
+        messageContainer.setAttribute('data-blocked', 'true');
+      }
+    }
+  });
+  
+  // Handle live chat messages
+  const liveChatMessages = document.querySelectorAll('div[class*="chat-line__message"][data-user]');
+  
+  liveChatMessages.forEach(messageDiv => {
+    const username = messageDiv.getAttribute('data-user');
+    if (username && blockedUsers.includes(username.toLowerCase())) {
+      // Hide the entire live chat message container
+      const messageContainer = messageDiv.closest('div[class*="Layout-sc-"]') || messageDiv;
       if (messageContainer) {
         messageContainer.style.display = 'none';
         messageContainer.setAttribute('data-blocked', 'true');
@@ -38,8 +54,16 @@ function createMessageObserver() {
         // Check if new chat messages were added
         mutation.addedNodes.forEach((node) => {
           if (node.nodeType === Node.ELEMENT_NODE) {
+            // Check for VOD chat messages
             if (node.matches('li[class*="InjectLayout"]') || 
                 node.querySelector('li[class*="InjectLayout"]')) {
+              shouldCheck = true;
+            }
+            // Check for live chat messages
+            if (node.matches('div[class*="chat-line__message"]') || 
+                node.querySelector('div[class*="chat-line__message"]') ||
+                node.matches('div[class*="Layout-sc-"]') ||
+                node.querySelector('div[class*="Layout-sc-"]')) {
               shouldCheck = true;
             }
           }
@@ -52,17 +76,26 @@ function createMessageObserver() {
     }
   });
   
-  // Start observing the chat container
-  const chatContainer = document.querySelector('[data-test-selector="chat-scrollable-area__message-container"]') ||
-                       document.querySelector('.chat-list') ||
-                       document.body;
+  // Start observing multiple possible chat containers
+  const chatContainers = [
+    // VOD chat container
+    document.querySelector('[data-test-selector="chat-scrollable-area__message-container"]'),
+    // Live chat container
+    document.querySelector('[data-test-selector="chat-scrollable-area__message-container"]'),
+    document.querySelector('.chat-list'),
+    document.querySelector('[class*="chat-scrollable-area"]'),
+    // Fallback to body if specific containers aren't found
+    document.body
+  ].filter(Boolean);
   
-  if (chatContainer) {
-    observer.observe(chatContainer, {
-      childList: true,
-      subtree: true
-    });
-  }
+  chatContainers.forEach(container => {
+    if (container) {
+      observer.observe(container, {
+        childList: true,
+        subtree: true
+      });
+    }
+  });
   
   return observer;
 }
@@ -84,8 +117,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 // Show all messages (remove blocking)
 function showAllMessages() {
-  const hiddenMessages = document.querySelectorAll('li[data-blocked="true"]');
-  hiddenMessages.forEach(message => {
+  // Show VOD chat messages
+  const hiddenVodMessages = document.querySelectorAll('li[data-blocked="true"]');
+  hiddenVodMessages.forEach(message => {
+    message.style.display = '';
+    message.removeAttribute('data-blocked');
+  });
+  
+  // Show live chat messages
+  const hiddenLiveMessages = document.querySelectorAll('div[class*="Layout-sc-"][data-blocked="true"], div[class*="chat-line__message"][data-blocked="true"]');
+  hiddenLiveMessages.forEach(message => {
     message.style.display = '';
     message.removeAttribute('data-blocked');
   });
