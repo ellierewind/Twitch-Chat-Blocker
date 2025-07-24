@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 300px;
+      padding: 15px;
+      font-family: "Roobert", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      background: #0e0e10;
+      color: #efeff1;
+      margin: 0;
+    }
+    
+    h2 {
+      margin: 0 0 15px 0;
+      color: #9146ff;
+      font-size: 16px;
+    }
+    
+    .blocked-user {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #2f2f35;
+    }
+    
+    .blocked-user:last-child {
+      border-bottom: none;
+    }
+    
+    .username {
+      font-weight: 500;
+    }
+    
+    .unblock-btn {
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    
+    .unblock-btn:hover {
+      background: #ff5252;
+    }
+    
+    .empty-state {
+      text-align: center;
+      color: #adadb8;
+      padding: 20px 0;
+    }
+    
+    .instructions {
+      background: #1f1f23;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 15px;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    
+    .clear-all-btn {
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+      width: 100%;
+      margin-top: 10px;
+    }
+    
+    .clear-all-btn:hover {
+      background: #ff5252;
+    }
+  </style>
+</head>
+<body>
+  <h2>Twitch VOD Chat Blocker</h2>
+  
+  <div class="instructions">
+    Right-click on any Twitch username link in VOD chat and select "Block this Twitch user" to hide their messages.
+  </div>
+  
+  <div id="blockedUsersList">
+    <div class="empty-state">No blocked users yet</div>
+  </div>
+  
+  <button id="clearAll" class="clear-all-btn" style="display: none;">Clear All Blocked Users</button>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
