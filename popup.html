@@ -57,7 +57,7 @@
     }
     
     .manual-add-section {
-      margin-bottom: 15px;
+      margin-bottom: 15px; /* Adjusted margin */
       padding-bottom: 15px;
       border-bottom: 1px solid #2f2f35;
     }
@@ -105,8 +105,8 @@
     
     #importExport {
       margin-top: 15px;
-      padding-top: 15px;
-      border-top: 1px solid #2f2f35;
+      padding-bottom: 15px; /* Added padding-bottom for the divider */
+      border-bottom: 1px solid #2f2f35; /* Changed to border-bottom for the divider */
       text-align: center;
     }
     
@@ -238,10 +238,10 @@
   </style>
 </head>
 <body>
-  <h2>Twitch VOD Chat Blocker</h2>
+  <h2>Twitch Chat Blocker</h2>
   
   <div class="instructions">
-    Right-click on any Twitch username link in VOD chat and select "Block this Twitch user" to hide their messages.
+    Right-click on any Twitch username link in chat and select "Block this Twitch user" to hide their messages.
   </div>
   
   <!-- Manual add section -->
@@ -249,15 +249,15 @@
     <input type="text" id="usernameInput" placeholder="Enter username to block" class="username-input">
     <button id="addUserBtn" class="add-user-btn">Block User</button>
   </div>
-  
-  <div id="blockedUsersList">
-    <div class="empty-state">No blocked users yet</div>
-  </div>
-  
+
   <div id="importExport">
     <button id="exportBtn" class="import-export-btn">Export Blocked Users</button>
     <button id="importBtn" class="import-export-btn">Import Blocked Users</button>
     <input type="file" id="fileInput" accept=".json" style="display: none;">
+  </div>
+  
+  <div id="blockedUsersList">
+    <div class="empty-state">No blocked users yet</div>
   </div>
   
   <!-- Custom notification -->
