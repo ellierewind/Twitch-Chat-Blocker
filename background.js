@@ -1,19 +1,22 @@
 // Background script for handling context menu
 chrome.runtime.onInstalled.addListener(() => {
-  // Create context menu item for links (VOD chat usernames)
-  chrome.contextMenus.create({
-    id: "blockTwitchUser",
-    title: "Block this Twitch user",
-    contexts: ["link"],
-    documentUrlPatterns: ["*://*.twitch.tv/*"]
-  });
-  
-  // Create context menu item for selected text (live chat usernames)
-  chrome.contextMenus.create({
-    id: "blockTwitchUserSelection",
-    title: "Block this Twitch user",
-    contexts: ["selection"],
-    documentUrlPatterns: ["*://*.twitch.tv/*"]
+  // Remove all existing context menu items first to avoid duplicates
+  chrome.contextMenus.removeAll(() => {
+    // Create context menu item for links (VOD chat usernames)
+    chrome.contextMenus.create({
+      id: "blockTwitchUser",
+      title: "Block this Twitch user",
+      contexts: ["link"],
+      documentUrlPatterns: ["*://*.twitch.tv/*"]
+    });
+    
+    // Create context menu item for selected text (live chat usernames)
+    chrome.contextMenus.create({
+      id: "blockTwitchUserSelection",
+      title: "Block this Twitch user",
+      contexts: ["selection"],
+      documentUrlPatterns: ["*://*.twitch.tv/*"]
+    });
   });
 });
 
