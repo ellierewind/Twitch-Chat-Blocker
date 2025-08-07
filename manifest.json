@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Twitch Chat Blocker",
-  "version": "6.0",
+  "version": "1.8",
   "description": "Block chat messages from specific users on Twitch",
   "permissions": [
     "contextMenus",

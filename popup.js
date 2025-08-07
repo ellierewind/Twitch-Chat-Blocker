@@ -1,4 +1,4 @@
-// Popup script for managing blocked users
+// Enhanced popup script for managing blocked users with chunked storage
 document.addEventListener('DOMContentLoaded', function() {
   loadBlockedUsers();
   
@@ -16,9 +16,12 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function loadBlockedUsers() {
-  chrome.storage.sync.get(['blockedUsers'], function(result) {
-    const blockedUsers = result.blockedUsers || [];
-    displayBlockedUsers(blockedUsers);
+  chrome.runtime.sendMessage({ action: 'getBlockedUsers' }, function(response) {
+    if (response && response.blockedUsers) {
+      displayBlockedUsers(response.blockedUsers);
+    } else {
+      displayBlockedUsers([]);
+    }
   });
 }
 
@@ -30,6 +33,9 @@ function displayBlockedUsers(blockedUsers) {
   } else {
     container.innerHTML = '';
     
+
+    
+    // Add users list
     blockedUsers.forEach(username => {
       const userDiv = document.createElement('div');
       userDiv.className = 'blocked-user';
@@ -46,16 +52,19 @@ function displayBlockedUsers(blockedUsers) {
       
       container.appendChild(userDiv);
     });
+
+
   }
 }
 
 function unblockUser(username) {
-  chrome.storage.sync.get(['blockedUsers'], function(result) {
-    const blockedUsers = result.blockedUsers || [];
-    const updatedUsers = blockedUsers.filter(user => user !== username);
-    
-    chrome.storage.sync.set({ blockedUsers: updatedUsers }, function() {
-      displayBlockedUsers(updatedUsers);
+  chrome.runtime.sendMessage({ 
+    action: 'removeBlockedUser', 
+    username: username 
+  }, function(response) {
+    if (response && response.success) {
+      loadBlockedUsers();
+      showNotification(`Successfully unblocked user: ${username}`, 'success');
       
       // Notify content script to refresh
       chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
@@ -65,14 +74,20 @@ function unblockUser(username) {
           });
         }
       });
-    });
+    } else {
+      showNotification('Error unblocking user', 'error');
+    }
   });
 }
 
 function clearAllBlockedUsers() {
-  if (confirm('Are you sure you want to unblock all users?')) {
-    chrome.storage.sync.set({ blockedUsers: [] }, function() {
+  chrome.runtime.sendMessage({ 
+    action: 'setBlockedUsers', 
+    users: [] 
+  }, function(response) {
+    if (response && response.success) {
       displayBlockedUsers([]);
+      showNotification('All users unblocked successfully', 'success');
       
       // Notify content script to refresh
       chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
@@ -82,8 +97,10 @@ function clearAllBlockedUsers() {
           });
         }
       });
-    });
-  }
+    } else {
+      showNotification('Error clearing blocked users', 'error');
+    }
+  });
 }
 
 function showNotification(message, type = 'info') {
@@ -146,30 +163,31 @@ function addUserManually() {
     return;
   }
   
-  chrome.storage.sync.get(['blockedUsers'], function(result) {
-    const blockedUsers = result.blockedUsers || [];
-    
-    if (blockedUsers.includes(username)) {
-      showNotification('User is already blocked', 'info');
-      input.value = '';
-      return;
+  chrome.runtime.sendMessage({ 
+    action: 'addBlockedUser', 
+    username: username 
+  }, function(response) {
+    if (response && response.success) {
+      if (response.wasAdded) {
+        loadBlockedUsers();
+        showNotification(`Successfully blocked user: ${username}`, 'success');
+        input.value = '';
+        
+        // Notify content script
+        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+          if (tabs[0] && tabs[0].url.includes('twitch.tv')) {
+            chrome.tabs.sendMessage(tabs[0].id, {
+              action: 'refreshBlockedUsers'
+            });
+          }
+        });
+      } else {
+        showNotification('User is already blocked', 'info');
+        input.value = '';
+      }
+    } else {
+      showNotification('Error blocking user: ' + (response.error || 'Unknown error'), 'error');
     }
-    
-    blockedUsers.push(username);
-    chrome.storage.sync.set({ blockedUsers }, function() {
-      displayBlockedUsers(blockedUsers);
-      showNotification(`Successfully blocked user: ${username}`, 'success');
-      input.value = '';
-      
-      // Notify content script
-      chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-        if (tabs[0] && tabs[0].url.includes('twitch.tv')) {
-          chrome.tabs.sendMessage(tabs[0].id, {
-            action: 'refreshBlockedUsers'
-          });
-        }
-      });
-    });
   });
 }
 
@@ -180,12 +198,13 @@ function escapeHtml(text) {
 }
 
 function exportBlockedUsers() {
-  chrome.storage.sync.get(['blockedUsers'], function(result) {
-    const blockedUsers = result.blockedUsers || [];
+  chrome.runtime.sendMessage({ action: 'getBlockedUsers' }, function(response) {
+    const blockedUsers = response.blockedUsers || [];
     const dataStr = JSON.stringify({
       blockedUsers: blockedUsers,
       exportDate: new Date().toISOString(),
-      version: "1.0"
+      version: "2.0", // Updated version to indicate chunked storage support
+      totalUsers: blockedUsers.length
     }, null, 2);
     
     const dataBlob = new Blob([dataStr], {type: 'application/json'});
@@ -198,6 +217,8 @@ function exportBlockedUsers() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    
+    showNotification(`Exported ${blockedUsers.length} blocked users`, 'success');
   });
 }
 
@@ -215,19 +236,25 @@ function importBlockedUsers(event) {
         return;
       }
       
-      const importedUsers = data.blockedUsers.filter(user => typeof user === 'string');
+      const importedUsers = data.blockedUsers.filter(user => 
+        typeof user === 'string' && /^[a-zA-Z0-9_]{1,25}$/.test(user)
+      );
       
       if (importedUsers.length === 0) {
         showNotification('No valid users found in the import file.', 'error');
         return;
       }
       
-      chrome.storage.sync.get(['blockedUsers'], function(result) {
-        const existingUsers = result.blockedUsers || [];
-        const mergedUsers = [...new Set([...existingUsers, ...importedUsers])];
-        
-        chrome.storage.sync.set({ blockedUsers: mergedUsers }, function() {
-          displayBlockedUsers(mergedUsers);
+      // Show loading notification
+      showNotification(`Importing ${importedUsers.length} users...`, 'info');
+      
+      chrome.runtime.sendMessage({ 
+        action: 'importBlockedUsers', 
+        users: importedUsers 
+      }, function(response) {
+        if (response && response.success) {
+          const result = response.result;
+          loadBlockedUsers();
           
           // Notify content script
           chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
@@ -238,13 +265,22 @@ function importBlockedUsers(event) {
             }
           });
           
-          const newUsersCount = mergedUsers.length - existingUsers.length;
-          if (newUsersCount > 0) {
-            showNotification(`Successfully imported ${newUsersCount} new blocked users!`, 'success');
+          // Show detailed import results
+          if (result.imported > 0) {
+            showNotification(
+              `Import complete! Added ${result.imported} new users. ` +
+              `${result.duplicates} were already blocked. Total: ${result.total}`,
+              'success'
+            );
           } else {
-            showNotification('All users from the import file were already blocked.', 'info');
+            showNotification(
+              `All ${importedUsers.length} users from the import file were already blocked.`,
+              'info'
+            );
           }
-        });
+        } else {
+          showNotification('Error importing users: ' + (response.error || 'Unknown error'), 'error');
+        }
       });
       
     } catch (error) {
